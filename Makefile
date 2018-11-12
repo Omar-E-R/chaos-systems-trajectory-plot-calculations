@@ -1,5 +1,5 @@
 all: library test
-	gcc -Wall main.o scanUser.o modifyTrajectoire.o convertToFile.o newTrajectoire.o plotTrajectoire.o fgetTrajectoire.o -o projet.exe
+	gcc -Wall main.o scanUser.o modifyTrajectoire.o convertToFile.o newTrajectoire.o plotTrajectoire.o fgetTrajectoire.o -o projet
 	./projet
 test:library
 	gcc -Wall -c main.c -o main.o
