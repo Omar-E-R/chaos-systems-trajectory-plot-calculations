@@ -69,6 +69,7 @@ struct fonctions
 
 typedef struct fonctions *Fonctions;
 
+#include "initTrajectoire.h"
 #include "scanUser.h"
 #include "convertToFile.h"
 #include "fgetTrajectoire.h"

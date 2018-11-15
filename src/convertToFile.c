@@ -302,14 +302,9 @@ Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 
 	add_extension_to_name(file_name,nom_trajectoire, ".sysdyn","./sysdyn/");
 
-	Trajectoire trajectoire = (Trajectoire)malloc(sizeof(Trajectoire));
-
-	trajectoire->equations->dx = parser(file_name,'\n','\n',5,6);
-	trajectoire->equations->dy = parser(file_name,'\n','\n',6,7);
-	trajectoire->equations->dz = parser(file_name,'\n','\n',7,8);
-	trajectoire->equations->nom_sys = parser(file_name,'\n','\n',8,9);
-
-	int Tmax=0;
+	Trajectoire trajectoire = initTrajectoire(initEquations(parser(file_name, '\n', '\n', 5, 6), parser(file_name, '\n', '\n', 6, 7), parser(file_name, '\n', '\n', 7, 8), parser(file_name, '\n', '\n', 8, 9)), initParametres(charToFloat(parser(file_name, '\n', '\n', 0, 1)), charToInt(parser(file_name, '\n', '\n', 1, 2)), initPoint(charToFloat(parser(file_name,'\n','\n',2,3)),charToFloat(parser(file_name,'\n','\n',3,4)),charToFloat(parser(file_name,'\n','\n',4,5)))));
+	/*
+	int Tmax=0;cd
 	float dt=0;
 
 	Point *pt=(Point*)malloc(sizeof(Point*));
@@ -427,7 +422,7 @@ Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 
 	//free(equ);
 	//free(param);
-
+*/
 	return trajectoire;
 }
 

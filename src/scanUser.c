@@ -59,9 +59,6 @@ int scan_nom(char* nom)
 
 Parametres scan_param()
 {
-	Parametres param=(Parametres)malloc(sizeof(Parametres));
-
-	param->point_init=(Point*)malloc(sizeof(Point*));
 
 	float dt;
 	int Tmax;
@@ -94,9 +91,6 @@ Parametres scan_param()
 		else
 			break;
 	}
-
-	param->dt=dt;
-	param->Tmax=Tmax;
 
 	printf("\nEntrez les coordonnees du point initiale M0=(x0, y0, z0) a t=0");
 
@@ -134,10 +128,8 @@ Parametres scan_param()
 		else
 			break;
 	}
-
-	param->point_init->x=x;
-	param->point_init->y=y;
-	param->point_init->z=z;
+	Point* pt=initPoint(x,y,z);
+	Parametres param=initParametres(dt,Tmax,pt);
 
 	return param;
 }
@@ -177,14 +169,7 @@ int scan_deriv(char V[])
 
 Sys_equation scan_equations()
 {
-	Sys_equation equ=(Sys_equation)malloc(sizeof(Sys_equation));
-
-	equ->nom_sys=(char *)malloc(2*SYS_NAME_SIZE_LIMIT*sizeof(char));
-
-	equ->dx=(char *)malloc(EQU_SIZE_LIMIT*sizeof(char));
-	equ->dy=(char *)malloc(EQU_SIZE_LIMIT*sizeof(char));
-	equ->dz=(char *)malloc(EQU_SIZE_LIMIT*sizeof(char));
-
+	Sys_equation equ=initequations();
 	while (!scan_nom(equ->nom_sys))
 	{
 
@@ -214,13 +199,13 @@ Sys_equation scan_equations()
 
 Trajectoire scan_trajectoire()
 {
-	Trajectoire trajectoire = (Trajectoire)malloc(sizeof(Trajectoire));
+	Trajectoire traject= inittrajectoire();
 
 	printf("\nSaisie de donnees:\n");
 
-	trajectoire->equations=scan_equations();
-	trajectoire->parametres=scan_param();
+	traject->equations=scan_equations();
+	traject->parametres=scan_param();
 
-	return trajectoire;
+	return traject;
 }
 
