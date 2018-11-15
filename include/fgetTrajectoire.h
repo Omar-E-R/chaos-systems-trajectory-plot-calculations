@@ -1,4 +1,3 @@
-#include"trajectoire.h"
 #ifndef FGETTRAJECTOIRE_H
 #define FGETTRAJECTOIRE_H
 

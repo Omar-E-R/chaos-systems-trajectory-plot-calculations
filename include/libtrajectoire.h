@@ -22,9 +22,9 @@
 
 struct point
 {
-	long double x;
-	long double y;
-	long double z;
+	double x;
+	double y;
+	double z;
 };
 typedef struct point Point;
 
@@ -61,12 +61,13 @@ typedef struct trajectoire *Trajectoire;
 
 struct fonctions
 {
-	long double (*Dx)(Point *);
-	long double (*Dy)(Point *);
-	long double (*Dz)(Point *);
+	double (*Dx)(Point *);
+	double (*Dy)(Point *);
+	double (*Dz)(Point *);
 };
 
 typedef struct fonctions *Fonctions;
+
 #include "scanUser.h"
 #include "convertToFile.h"
 #include "fgetTrajectoire.h"
