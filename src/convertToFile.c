@@ -116,7 +116,7 @@ int convert_struct_to_function(Trajectoire traject)
 
 	fprintf(fp, "#include<stdio.h>\n");
 	fprintf(fp, "#include<stdlib.h>\n");
-	fprintf(fp, "#include\"trajectoire.h\"\n\n\n");
+	fprintf(fp, "#include\"libtrajectoire.h\"\n\n\n");
 
 	fprintf(fp, "float dt=%f;\n",traject->parametres->dt);
 	fprintf(fp, "int Tmax=%d;\n",traject->parametres->Tmax);

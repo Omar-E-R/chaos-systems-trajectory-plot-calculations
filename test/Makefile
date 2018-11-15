@@ -1,49 +1,60 @@
 LIBDIR := ../lib
 HDRDIR := ../include
-BINDIR := ../bin
+BINDIR := bin
+OBJDIR := obj
 TESTDIR := .
 DATADIR := data
 GRAPHDIR := graphes
 SYSDIR := sysdyn
-SRCPLOTDIR := sysdyn
-TMPDIR := tmp
+SRCPLOTDIR := tmp
 SEARCHDIR := search
 
 
 SOURCES := $(wildcard $(TESTDIR)/*.c)
 
-LIBRARY := $(wildcard $(LIBDIR)/.so)
+OBJECTS := $(SOURCES:%.c=%.o)
+
+LIBRARY := $(wildcard $(LIBDIR)/*.so)
 
 INCLUDES := $(LIBRARY:$(LIBDIR)/%.so=$(HDRDIR)/%.h)
 
-PLOTSRC := $(wildcard $(TESTDIR)/$(SRCPLOTDIR)/*.c)
 
-$(PLOT) := $(PLOTSRC:$(TESTDIR)/$(SRCPLOTDIR)/%.c=$(TESTDIR)/$(SRCPLOTDIR)/%)
+
+CC := gcc
+CFLAGS := -Wall -g -I$(HDRDIR)
+LFLAGS := -L$(LIBDIR) -ltrajectoire
 
 TARGET := projetOmar
 
-CC := gcc
-
-CFLAGS := -Wall -g -I$(HDRDIR)
-LFLAGS := -L$(LIBDIR) -l$(LIBRARY)
-
 $(TARGET): $(BINDIR)/$(TARGET)
-	./$^
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../lib
+	export LD_LIBRARY_PATH
+	$^
 #link and compile the main C file that contains main
-$(BINDIR)/$(TARGET): $(SOURCES) $(INCLUDES)
-	$(CC) $(CFLAGS) $(LFLAGS) $< -o $@
+$(BINDIR)/$(TARGET): $(OBJECTS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
+$(OBJECTS):%.o:%.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
+
+
+PLOTSRC := $(wildcard $(TESTDIR)/$(SRCPLOTDIR)/*.c)
+PLOTOBJ:= $(PLOTSRC:%.c=%.o)
+PLOT := $(PLOTSRC:$(TESTDIR)/$(SRCPLOTDIR)/%.c=$(TESTDIR)/$(SRCPLOTDIR)/%)
+
 #link and compile all the dynamic system C files, that normally are responsible for generating .dat files for plot
-$(PLOT):$(TESTDIR)/$(SRCPLOTDIR)/%: $(TESTDIR)/$(SRCPLOTDIR)/%.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(LFLAGS) $< -o $@
+#$(PLOT):$(TESTDIR)/$(SRCPLOTDIR)/%: $(TESTDIR)/$(SRCPLOTDIR)/%.c $(INCLUDES)
+#	$(CC) $(CFLAGS) $< $(LFLAGS) -o $@
 
 .PHONY: clean wipe
 
-wipe:clean
+wipe:
 	rm -rf $(TMPDIR)/*
 
 clean:
-	mv $(DATADIR)/* $(TMPDIR)
-	mv $(SYSDIR)/* $(TMPDIR)
-	mv $(GRAPHDIR)/* $(TMPDIR)
-	mv $(BINDIR)/* $(TMPDIR)
-	mv $(SEARCHDIR)/* $(TMPDIR)
+	rm -rf $(BINDIR)/*
+	rm -rf $(DATADIR)/*
+	rm -rf $(SYSDIR)/*
+	rm -rf $(GRAPHDIR)/*
+	rm -rf $(SEARCHDIR)/*
