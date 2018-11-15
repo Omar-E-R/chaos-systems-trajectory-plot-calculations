@@ -3,7 +3,7 @@
 #include <string.h>
 #include "libtrajectoire.h"
 
-/* -------------------------USELESS FUNCTIONS-------------------*/
+/* -------------------------USELESS FUNCTIONS-------------------
 /////////////////////////////////////////////////////////////////////////
 void modify_struct_param(Trajectoire trajectoire)
 {
@@ -25,7 +25,7 @@ int modify_sysdyn_file_param(char file_name[])
 
 	FILE *fp = fopen(file_name,"w+");
 	
-	/*	ERROR HANDLING	*/
+	//	ERROR HANDLING	
 	if (!fp)
 	{
 		perror("File opening failed");
@@ -89,8 +89,7 @@ int modify_sysdyn_file_equations(Sys_equation new_equations)
 
 
 
-
-
+*/
 
 
 int modifyTrajectoire(char* nom_trajectoire)
@@ -134,16 +133,8 @@ int modifyTrajectoire(char* nom_trajectoire)
 	convert_struct_to_sysdyn_file(trajectoire);
 
 	convert_struct_to_function(trajectoire);
+	plot(trajectoire->equations->nom_sys);
 
-	FILE *compileSys = popen("./compileSys.sh", "w");
-
-	if (!compileSys)
-	{
-		perror("File opening failed");
-		return EXIT_FAILURE;
-	}
-	fprintf(compileSys, "%s", trajectoire->equations->nom_sys);
-	pclose(compileSys);
 	return 0;
 	
 }

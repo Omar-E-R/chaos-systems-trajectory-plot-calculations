@@ -13,11 +13,11 @@ void clear()
 }
 
 /*--------------ADD THE EXTENSION .C OR .SYSDYN TO THE SYSTEM NAME (NULL TERMINATED STRING) SO WE GET THE FILNAME------*/
-void  add_extension_to_name(char* file_name, char* nom_trajectoire, char* dot_extension)
+void  add_extension_to_name(char* file_name, char* nom_trajectoire, char* dot_extension, char* directory)
 {
 
-	char str[10]="./data/";
-	strcpy(file_name, str);
+	
+	strcpy(file_name, directory);
 	strcat(file_name, nom_trajectoire);
 
 	/*		ADDING EXTENSION TO THE STRING SO IT MATCHES THE FILENAME		*/

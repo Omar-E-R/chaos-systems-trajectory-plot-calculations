@@ -9,7 +9,7 @@ int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 	
 	char* file_name=(char*)malloc(SYS_NAME_SIZE_LIMIT*sizeof(char));
 
-	add_extension_to_name(file_name,trajectoire->equations->nom_sys,".sysdyn");
+	add_extension_to_name(file_name,trajectoire->equations->nom_sys,".sysdyn","./sysdyn/");
 
 	FILE *sysdyn = fopen(file_name, "w+");
 	
@@ -19,7 +19,7 @@ int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 		return EXIT_FAILURE;
 	}
 
-
+	fprintf(sysdyn, "\n");
 	fprintf(sysdyn, "%f\n", trajectoire->parametres->dt);
 
 	fprintf(sysdyn, "%d\n", trajectoire->parametres->Tmax);
@@ -41,7 +41,7 @@ int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 	return 0;
 }
 
-int convert_struct_to_data_file(Fonctions f, Parametres param_init, char file_name[])
+int convert_struct_to_data_file(Fonctions f, Parametres param_init, char* file_name)
 {
 
 	int j = 0;//INT OR DOUBLE? WHICH IS BETTER? TEST
@@ -99,10 +99,7 @@ int convert_struct_to_function(Trajectoire traject)
 
 	char *file_name = (char *)malloc(2*SYS_NAME_SIZE_LIMIT * sizeof(char));
 
-	strcpy(file_name, traject->equations->nom_sys);
-
-	strcat(file_name, ".c");
-
+	add_extension_to_name(file_name, traject->equations->nom_sys,".c","./tmp/");
 
 	FILE *fp = fopen(file_name, "w+");
 
@@ -233,7 +230,7 @@ int convert_struct_to_function(Trajectoire traject)
 	fprintf(fp, "\n");
 	fprintf(fp, "\tparam->Tmax=Tmax;\n");
 
-	fprintf(fp, "\tconvert_struct_to_data_file(%s, param, \"./data/%s.dat\");\n",traject->equations->nom_sys, traject->equations->nom_sys);
+	fprintf(fp, "\tconvert_struct_to_data_file(%s, param, \"data/%s.dat\");\n",traject->equations->nom_sys, traject->equations->nom_sys);
 	fprintf(fp, "\tplot_trajectoire(\"%s.dat\");\n", traject->equations->nom_sys);
 	fprintf(fp, "\n");
 
@@ -252,7 +249,6 @@ int convert_struct_to_function(Trajectoire traject)
 
 
 
-/* ----------------------------THESE FUNCTIONS NEEDS FIXING ---------------------*/
 
 
 int charToInt(char* c)
@@ -304,16 +300,14 @@ Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 
 	char *file_name = (char *)malloc(SYS_NAME_SIZE_LIMIT * sizeof(char));
 
-	add_extension_to_name(file_name,nom_trajectoire, ".sysdyn");
+	add_extension_to_name(file_name,nom_trajectoire, ".sysdyn","./sysdyn/");
 
 	Trajectoire trajectoire = (Trajectoire)malloc(sizeof(Trajectoire));
 
-	trajectoire->equations = (Sys_equation)malloc(sizeof(Sys_equation));
-	trajectoire->parametres = (Parametres)malloc(sizeof(Parametres));
-	trajectoire->parametres->point_init= (Point*)malloc(sizeof(Point*));
-	trajectoire->equations->dx = (char *)malloc(EQU_SIZE_LIMIT * sizeof(char));
-	trajectoire->equations->dy = (char *)malloc(EQU_SIZE_LIMIT * sizeof(char));
-	trajectoire->equations->dz = (char *)malloc(EQU_SIZE_LIMIT * sizeof(char));
+	trajectoire->equations->dx = parser(file_name,'\n','\n',5,6);
+	trajectoire->equations->dy = parser(file_name,'\n','\n',6,7);
+	trajectoire->equations->dz = parser(file_name,'\n','\n',7,8);
+	trajectoire->equations->nom_sys = parser(file_name,'\n','\n',8,9);
 
 	int Tmax=0;
 	float dt=0;

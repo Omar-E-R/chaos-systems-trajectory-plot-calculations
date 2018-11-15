@@ -26,8 +26,7 @@ CC := gcc
 
 CFLAGS := -Wall -g
 
-#-pie on some systems -fpic or -fPIC
-LFLAGS := -pie -I$(HDRDIR)
+LFLAGS := -fPIC -I$(HDRDIR)
 
 
 $(LIBDIR)/$(TARGET): $(OBJECTS)

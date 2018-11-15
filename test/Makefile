@@ -29,23 +29,27 @@ TARGET := projetOmar
 $(TARGET): $(BINDIR)/$(TARGET)
 	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../lib
 	export LD_LIBRARY_PATH
-	$^
+	#clear
 #link and compile the main C file that contains main
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
-$(OBJECTS):%.o:%.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJECTS): %.o: %.c $(INCLUDES)
+	$(CC) $(CFLAGS) -pie -c $< -o $@
 
 
 
 
 PLOTSRC := $(wildcard $(TESTDIR)/$(SRCPLOTDIR)/*.c)
-PLOTOBJ:= $(PLOTSRC:%.c=%.o)
-PLOT := $(PLOTSRC:$(TESTDIR)/$(SRCPLOTDIR)/%.c=$(TESTDIR)/$(SRCPLOTDIR)/%)
+PLOTOBJ := $(PLOTSRC:%.c=%.o)
+PLOT := $(PLOTSRC:$(TESTDIR)/$(SRCPLOTDIR)/%.c=$(TESTDIR)/$(BINDIR)/%)
 
 #link and compile all the dynamic system C files, that normally are responsible for generating .dat files for plot
-#$(PLOT):$(TESTDIR)/$(SRCPLOTDIR)/%: $(TESTDIR)/$(SRCPLOTDIR)/%.c $(INCLUDES)
-#	$(CC) $(CFLAGS) $< $(LFLAGS) -o $@
+plot: $(PLOT)
+$(PLOT):$(TESTDIR)/$(BINDIR)/%: $(PLOTOBJ)
+	$(CC) $(CFLAGS) $^ $(LFLAGS) -o $@
+	$@
+$(PLOTOBJ): %.o: %.c $(INCLUDES)
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 .PHONY: clean wipe
 
@@ -54,7 +58,9 @@ wipe:
 
 clean:
 	rm -rf $(BINDIR)/*
+	rm -rf *.o
 	rm -rf $(DATADIR)/*
 	rm -rf $(SYSDIR)/*
 	rm -rf $(GRAPHDIR)/*
 	rm -rf $(SEARCHDIR)/*
+	rm -rf $(SRCPLOTDIR)/*

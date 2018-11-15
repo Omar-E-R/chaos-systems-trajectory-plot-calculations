@@ -5,20 +5,15 @@
 int newTrajectoire()
 {
 	Trajectoire trajectoire=scan_trajectoire();
+	char* file_name=(char*)malloc(SYS_NAME_SIZE_LIMIT*sizeof(char));
+	add_extension_to_name(file_name,trajectoire->equations->nom_sys,".sysdyn","./");
+	char* checkIfexists=(char*)malloc(MAX_SYSTEMS*sizeof(char));
 
+	fgetline(file_name,0,0);
 	convert_struct_to_sysdyn_file(trajectoire);
 	convert_struct_to_function(trajectoire);
 
-	FILE *compileSys = popen("./compileSys.sh", "w");
-
-	if (!compileSys)
-	{
-		perror("File opening failed");
-		return EXIT_FAILURE;
-	}
-	fprintf(compileSys, "%s", trajectoire->equations->nom_sys);
-	pclose(compileSys);
-
+	plot(trajectoire->equations->nom_sys);
 	return 0;
 	
 }

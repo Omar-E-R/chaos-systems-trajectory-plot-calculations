@@ -17,6 +17,7 @@
 
 
 #define EQU_SIZE_LIMIT 100
+#define MAX_SYSTEMS 10
 #define PARAM_SIZE_LIMIT 20
 #define SYS_NAME_SIZE_LIMIT 30
 

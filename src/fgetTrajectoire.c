@@ -4,48 +4,8 @@
 #include <ctype.h>
 #include "libtrajectoire.h"
 
-char* fgetParam(char file_name[])
-{
-	FILE *fp = fopen(file_name, "r");
 
-	/*	ERROR HANDLING	*/
-	
-	if (!fp)
-	{
-		perror("File opening failed");
-		return EXIT_FAILURE;
-	}
-
-	int c; //BECAUSE Char TYPE CANT CONTAIN AN EOF
-
-	int nb_of_lines = 0;
-
-	int i=0;
-
-	char* parametres = (char *)malloc(EQU_SIZE_LIMIT*sizeof(char)); //CREATING A STRING THAT WILL CONTAIN ALL parameters OF MAX SIZE =SIZE PARAM_SIZE_LIMIT seperated by an \n
-	while ((c = fgetc(fp)) != EOF && nb_of_lines<=4)
-	{
-		
-		if (c == '\n')
-		{
-			nb_of_lines++;
-		}
-		parametres[i] = c;
-		i++;
-	}
-	/*			ERROR HANDLING				*/
-	if (ferror(fp))
-		puts("I/O error when reading");
-	
-
-	fclose(fp);
-	/*		DATA GATHERING FINISHED		*/
-
-	return parametres;
-}
-
-
-char* fgetEquations(char file_name[])
+char* fgetline(char file_name[], int startLine, int endLine)
 {
 	FILE *fp = fopen(file_name, "r");
 
@@ -53,20 +13,21 @@ char* fgetEquations(char file_name[])
 	if (!fp)
 	{
 		perror("File opening failed");
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 
 	int c; //BECAUSE Char TYPE CANT CONTAIN AN EOF
 
-	int nb_of_lines = 0, i=0;
+	int nb_of_lines = 0, i=0;//FIRST LINE NUMBER IS 0
 
-	char* new_sys=(char*)malloc(3*EQU_SIZE_LIMIT*sizeof(char)); //CREATING A STRING THAT WILL CONTAIN ALL 3 EQUATIONS OF MAX SIZE=SIZE EQ_SIZE_LIMIT
-	while ((c = fgetc(fp)) != EOF)
+	char* stringLine=(char*)malloc(6*EQU_SIZE_LIMIT*sizeof(char)); //CREATING A STRING THAT WILL CONTAIN ALL DATA
+	
+	while ((c=fgetc(fp)) != EOF)
 	{
 
-		if (nb_of_lines >= 5) //EQUATIONS ARE REGISTERED AFTER THE 5TH LINE
+		if (startLine <= nb_of_lines && nb_of_lines <= endLine) //EQUATIONS ARE REGISTERED AFTER THE 5TH LINE
 		{
-			new_sys[i] = c;
+			stringLine[i] = c;
 
 			i++;
 		}
@@ -75,13 +36,44 @@ char* fgetEquations(char file_name[])
 			nb_of_lines++;
 		}
 	}
-	/*			ERROR HANDLING				*/
+	/*			ERROR WHILE READING THE FILE CHECKING				*/
 	if (ferror(fp))
 		puts("I/O error when reading");
-	else if (feof(fp))
-		puts("\nEnd of file reached successfully");
 
 	fclose(fp);
 	/*		DATA GATHERING FINISHED		*/
-	return new_sys;
+	return stringLine;
+}
+char* parser(char* file_name,char startparsingCaracter,char endparsingCaracter, int start, int end)
+{
+	char* stringToparse=fgetline(file_name, start, end);
+	char* result=(char*)malloc(30*MAX_SYSTEMS*sizeof(char));
+	int i=0;
+	
+	while(1)
+	{
+		if(stringToparse[i] == startparsingCaracter)
+		{
+			i++;
+			while (stringToparse[i] != endparsingCaracter)
+			{
+				result[i]=stringToparse[i];
+				i++;
+			}
+			break;
+		}
+		i++;
+	}
+	result[i]='\0';
+	free(stringToparse);
+	return result;
+}
+char* fgetParam(char file_name[])
+{
+	return fgetline(file_name, 0, 4);
+}
+
+char* fgetEquations(char file_name[])
+{
+	return fgetline(file_name, 5, 9);
 }
