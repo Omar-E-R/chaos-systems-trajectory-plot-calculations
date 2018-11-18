@@ -21,7 +21,7 @@ Point* initPoint(double x, double y, double z)
 Parametres initparametres()
 {
 	Parametres param = (Parametres)malloc(sizeof(Parametres));
-	param->point_init=initpoint;
+	param->point_init=initpoint();
 	return param;
 }
 
@@ -71,7 +71,7 @@ Trajectoire inittrajectoire()
 	traject->equations=initequations();
 	traject->parametres=initparametres();
 
-
+	return traject;
 }
 
 Trajectoire initTrajectoire(Sys_equation equ, Parametres param)
