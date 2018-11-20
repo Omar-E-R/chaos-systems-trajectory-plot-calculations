@@ -9,9 +9,9 @@
 
 SRCDIR := src
 HDRDIR := include
-OBJDIR := obj
+OBJDIR := tmp
 LIBDIR := lib
-TMPDIR := tmp
+TMPDIR := $(OBJDIR)
 
 
 SOURCES :=$(wildcard $(SRCDIR)/*.c)
@@ -31,14 +31,14 @@ LFLAGS := -fPIC -I$(HDRDIR)
 
 $(LIBDIR)/$(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) -shared $^ -o $@
+	rm -rf $(OBJECTS)
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(HDRDIR)/$(INCLUDES)
 	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@
 
 .PHONY: clean wipe
 
-wipe:
+wipe: clean
 	rm -rf $(TMPDIR)/*
 clean:
-	mv -f $(OBJECTS) $(TMPDIR)
 	mv -f $(LIBDIR)/$(TARGET) $(TMPDIR)

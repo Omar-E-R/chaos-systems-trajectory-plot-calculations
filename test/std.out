@@ -1,0 +1,49 @@
+make[1]: Entering directory '/home/fangtooth/proj/test'
+gcc -Wall -g -fPIC -I../include -c tmp/lorenz.c -o tmp/lorenz.o
+gcc -Wall -g -fPIC -I../include tmp/lorenz.o -L../lib -ltrajectoire -o bin/lorenz
+./bin/lorenz
+New Dynamic System data file is created.
+rm -f ./bin/lorenz
+rm -f tmp/*
+make[1]: Leaving directory '/home/fangtooth/proj/test'
+
+Soit un point M qui subit des forces qui ne dependent que de la position et vitesse de point M.
+On utilise les coordonnees cartesiennes (x, y, z) pour reperer le point M dans l'espace.
+Soit le vecteur position de M U=(x,y,z)
+
+>On conclut d'apres la L.F.D que:
+A tout instant t on peut exprimer les derivees partielles de vecteur position de M: dx/dt, dy/dt, dz/dt
+en fonction des constantes et x, y, et z.
+
+A un instant t: U=(X,Y,Z), donc a t+dt: x=X+(dx/dt)(en X)*dt, de meme pour y et z
+Conclusion:
+	si on calcule tous les points entre t0 et Tmax(suffisement grand) avec dt=suffisement petit
+	on pourrait tracer le trajectoire de M avec un incertitude->0 quand en t~0 dt->0 en t>>0 Tmax->infini
+
+[*convention d'ecriture]:
+	-caracteres speciaux: + - . * / ( )
+	-lettres pour designer les coordonnees: x y z
+[toute autres caratere serait rejetes et renvoie une erreur]
+
+
+Press any key to continue...
+
+
+----------------------CREATING NEW SYSTEM--------------------
+Nom du systeme:
+Sucess: Dynamic System name
+
+(dx/dt)=
+(dy/dt)=
+(dz/dt)=
+Entrez la valeur de l'increment de temps dt puis celle du temps maximale Tmax
+
+Attention: Il y'aura Tmax/dt points.
+
+Entrez les coordonnees du point initiale de trajectoire (x0, y0, z0)
+
+z0=
+y0=
+x0=
+Tmax=
+dt=New Dynamic System data file is created.

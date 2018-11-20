@@ -3,20 +3,9 @@
 #include <string.h>
 #include "libtrajectoire.h"
 
+
 /* -------------------------USELESS FUNCTIONS-------------------
 /////////////////////////////////////////////////////////////////////////
-void modify_struct_param(Trajectoire trajectoire)
-{
-	trajectoire->parametres=scan_param();
-
-
-}
-
-void modify_struct_equations(Trajectoire trajectoire)
-{
-	trajectoire->equations =scan_equations();
-}
-
 int modify_sysdyn_file_param(char file_name[])
 {
 
@@ -92,48 +81,100 @@ int modify_sysdyn_file_equations(Sys_equation new_equations)
 */
 
 
+void modify_struct_point(Trajectoire trajectoire)
+{
+	trajectoire->parametres->point_init=scanPoint();
+
+}
+void modify_struct_param(Trajectoire trajectoire)
+{
+	char choix;
+	do
+	{
+		printf("\nEnter: \n\t'i' to modify initial point");
+		printf("\n\t't' to modify Time interval\n");
+
+	}while ((choix = getchar()) != 'i' && choix != 't');
+	clear();
+	if(choix=='i')
+	{
+		modify_struct_point(trajectoire);
+		return;
+	}
+	if(choix=='t')
+	{
+		trajectoire->parametres->Tmax=scanInt("Tmax");
+		trajectoire->parametres->dt=scandv("dt");
+		return;
+	}
+
+
+}
+
+void modify_struct_equations(Trajectoire trajectoire)
+{
+	trajectoire->equations = scan_equations();
+}
+
 int modifyTrajectoire(char* nom_trajectoire)
 {
-	Trajectoire trajectoire=convert_sysdyn_file_to_struct(nom_trajectoire);
+	Trajectoire trajectoire = convert_sysdyn_file_to_struct(nom_trajectoire);
+	
 
 	char choix;
 
 	do
 	{
-		printf("\nEnter:\n\tp to modify the Parameters\n\te to modify the Equations and/or the system name\n");
+		printf("\n\n\nEnter:\n\t'p' to modify the Parameters\n\t'e' to modify the Equations\n\t'n' the system name\n\t'q' to abort modification\n");
 
-	}while((choix=getchar())!='e' && choix!='p' );
+	} while ((choix = getchar()) != 'e' && choix != 'p' && choix != 'n' && choix != 'q');
+	clear();
+	if(choix=='e')
+	{
 
+		modify_struct_equations(trajectoire);
+
+		
+	}
 	if(choix=='p')
 	{
-		clear();
 
-		trajectoire->parametres= scan_param();
+		modify_struct_param(trajectoire);
 
 
 	}
-	if(choix=='e')
+	if(choix=='q')
 	{
-		clear();
+		return 0;
+	}
+	if(choix=='n')
+	{
 
-		trajectoire->equations = scan_equations();
+		trajectoire->nom_sys=scanNom();
 
-		FILE *removeSys = popen("./removeSys.sh", "w");
-
-		if (!removeSys)
+		
+	}
+	if (choix == 'e' || choix=='p')
+	{
+		char choice;
+		do
 		{
-			perror("File opening failed");
-			return EXIT_FAILURE;
+			clear();
+			printf("\nDo you want to save modifications in a new System and keep the old one? y/n\n");
+		} while ((choice = getchar()) != 'n' && choice != 'y');
+		if (choix == 'y')
+		{
+			clear();
+			printf("Enter the new system Name to save this modification\n");
+			trajectoire->nom_sys = scanNom();
 		}
-		fprintf(removeSys, "%s\n", trajectoire->equations->nom_sys);
-		fprintf(removeSys, "%s\n", nom_trajectoire);
-		pclose(removeSys);
 	}
 
 	convert_struct_to_sysdyn_file(trajectoire);
 
 	convert_struct_to_function(trajectoire);
-	plot(trajectoire->equations->nom_sys);
+
+	plot(trajectoire->nom_sys);
 
 	return 0;
 	

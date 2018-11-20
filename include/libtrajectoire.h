@@ -18,8 +18,8 @@
 
 #define EQU_SIZE_LIMIT 100
 #define MAX_SYSTEMS 10
-#define PARAM_SIZE_LIMIT 20
-#define SYS_NAME_SIZE_LIMIT 30
+#define PARAM_SIZE_LIMIT 30
+#define SYS_NAME_SIZE_LIMIT 50
 
 struct point
 {
@@ -27,14 +27,13 @@ struct point
 	double y;
 	double z;
 };
-typedef struct point Point;
+typedef struct point *Point;
 
 
 
 
 struct sys_equation
 {
-	char* nom_sys;
 	char* dx;
 	char* dy;
 	char* dz;
@@ -45,8 +44,8 @@ typedef struct sys_equation *Sys_equation;
 
 struct parametres
 {
-	Point* point_init;
-	float dt;
+	Point point_init;
+	double dt;
 	int Tmax;
 };
 
@@ -54,17 +53,18 @@ typedef struct parametres *Parametres;
 
 struct trajectoire
 {
-	Sys_equation equations;
 	Parametres parametres;
+	Sys_equation equations;
+	char* nom_sys;
 };
 
 typedef struct trajectoire *Trajectoire;
 
 struct fonctions
 {
-	double (*Dx)(Point *);
-	double (*Dy)(Point *);
-	double (*Dz)(Point *);
+	double (*Dx)(Point pt);
+	double (*Dy)(Point pt);
+	double (*Dz)(Point pt);
 };
 
 typedef struct fonctions *Fonctions;

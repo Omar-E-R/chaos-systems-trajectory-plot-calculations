@@ -13,143 +13,171 @@ void clear()
 }
 
 /*--------------ADD THE EXTENSION .C OR .SYSDYN TO THE SYSTEM NAME (NULL TERMINATED STRING) SO WE GET THE FILNAME------*/
-void  add_extension_to_name(char* file_name, char* nom_trajectoire, char* dot_extension, char* directory)
+char*  add_extension_to_name(char* nom_trajectoire, char* dot_extension, char* directory)
 {
 
-	
-	strcpy(file_name, directory);
+	char *file_name = initnom();
+
+	if(directory!=NULL)
+	{
+		strcpy(file_name, directory);
+	}
+
 	strcat(file_name, nom_trajectoire);
 
-	/*		ADDING EXTENSION TO THE STRING SO IT MATCHES THE FILENAME		*/
+	if(dot_extension!=NULL)
+	{
+		strcat(file_name, dot_extension);
+	}
 
-	strcat(file_name, dot_extension);
 
+	return file_name;
 }
 
 
-/*------------SCAN THE NAME OF THE SYSTEM FROM THE USER--------
 
-IT RETURNS THE NUMBER OF CHARACTERS THE STRING CONTAINS, SO WE CAN VERIFY THAT THE STRING IS NOT EMPTY 
-
-*/
-int scan_nom(char* nom)
+int getNom(char* nom)
 {
-	int i = 0;
-	char c;
-	printf("\nNom du systeme(25 caracteres maximum sans espace et sans caractere alphanum):");
-	while ((c = getchar()) != EOF && c != '\n')
+
+	int read;
+	int i=0;
+
+	while((read = getchar())!= EOF && read != '\n')
 	{
-		if (isalpha(c) && i < (SYS_NAME_SIZE_LIMIT - 2))
+		if (!isalpha(read))
 		{
-			nom[i] = c;
-			i++;
+			puts("Error: Invalid character, name can only contains alphanumeric characters \"ABCDE abcde 01234\"");
+			clear();
+			return 0;
+		}
+		nom[i]=read;
+		i++;
+		if(i == (SYS_NAME_SIZE_LIMIT-15))
+		{
+			puts("Memory full");
+			clear();
+			break;
 		}
 	}
+
 	nom[i]='\0';
+
 	return i;
+	
 }
 
-
-
-/* ---------------FUNCTION THAT SCANS ALL THE PARAMETERS----------------
-
-			IT  ALLOCATE MEMORY FOR THE VARIBALES
-
-*/
-
-Parametres scan_param()
+char* scanNom()
 {
+	char* nom=initnom();
 
-	float dt;
-	int Tmax;
-	double x;
-	double y;
-	double z;
+	while(1)
+	{
+		do{
+			printf("Nom du systeme:\n");
+		}while (!getNom(nom));
 
+		char *file_name = add_extension_to_name(nom, ".sysdyn", "./sysdyn/");
+
+		FILE *sysdyn = fopen(file_name, "r");
+		if (!sysdyn)
+		{
+			puts("Sucess: Dynamic System name");
+			break;
+		}
+		else
+		{
+			puts("ERROR: DYNAMIC SYSTEM NAME ALREADY EXISTS");
+			printf("Nom existe deja, veuillez utiliser un autre nom\n");
+		}
+	}
+	return nom;
+}
+
+int scanInt(char* ch)
+{
+	int t=0;
+	while (1)
+	{
+		printf("\n%s=",ch);
+		if (!scanf("%d", &(t)))
+		{
+			printf("scan%s: syntax error, '%s' is of type 'int'\n",ch,ch);
+			clear();
+		}
+		else
+			break;
+	}
+	return t;
+}
+
+double scandv(char* ch)
+{
+	double dv=0;
+	while (1)
+	{
+		printf("\n%s=",ch);
+		if (!scanf("%lf", &(dv)))
+		{
+			printf("scan%s: syntax error, '%s' is of type 'double'\n",ch,ch);
+			clear();
+		}
+		else
+			break;
+	}
+	return dv;
+}
+Point scanPoint()
+{
+	printf("\nEntrez les coordonnees du point initiale de trajectoire (x0, y0, z0)\n");
+
+	Point pt=initPoint(scandv("x0"),scandv("y0"), scandv("z0"));
+
+	return pt;
+}
+
+Parametres scanParam()
+{
 	printf("\nEntrez la valeur de l'increment de temps dt puis celle du temps maximale Tmax\n");
 	printf("\nAttention: Il y'aura Tmax/dt points.\n");
 
-	while (1)
-	{
-		printf("\ndt=");
-		if (!scanf("%f", &(dt)))
-		{
-			printf("-scanUser: scan_param: syntax error, 'dt' is of type 'float'\n");
-			clear();
-		}
-		else
-			break;
-	}
-	while (1)
-	{
-		printf("\nTmax=");
-		if (!scanf("%d", &(Tmax)))
-		{
-			printf("-scanUser: scan_param: syntax error, 'Tmax' is of type 'int'\n");
-			clear();
-		}
-		else
-			break;
-	}
-
-	printf("\nEntrez les coordonnees du point initiale M0=(x0, y0, z0) a t=0");
-
-	while (1)
-	{
-		printf("\nx0=");
-		if (!scanf("%lf", &(x)))
-		{
-			printf("-start.c: scan_param: syntax error, 'x0' is of type 'float'\n");
-			clear();
-		}
-		else
-			break;
-	}
-
-	while (1)
-	{
-		printf("\ny0=");
-		if (!scanf("%lf", &(y)))
-		{
-			printf("-start.c: scan_param: syntax error, 'y0' is of type 'float'\n");
-			clear();
-		}
-		else
-			break;
-	}
-	while (1)
-	{
-		printf("\nz0=");
-		if (!scanf("%lf", &(z)))
-		{
-			printf("-start.c: scan_param: syntax error, 'z0' is of type 'float'\n");
-			clear();
-		}
-		else
-			break;
-	}
-	Point* pt=initPoint(x,y,z);
-	Parametres param=initParametres(dt,Tmax,pt);
+	
+	Parametres param=initParametres(scandv("dt"),scanInt("Tmax"),scanPoint());
 
 	return param;
 }
 
+/*
 
 
 
 
-int scan_deriv(char V[])
+
+
+
+
+
+EQUATIONS VERFICAATION IMPLEMENTATION
+
+
+
+
+
+
+
+*/
+
+int getEquation(char V[])
 {
 	int eq_size=0;
 	char c;
 
-	while(((c=getchar()) != EOF && c!='\n'))
+	while (((c = getchar()) != EOF && c != '\n'))
 	{
 		if (c != 32 && eq_size < (EQU_SIZE_LIMIT - 2))// ASCII 32 correspond aux espaces
 		{
 			if(!(('('<=c && c<='9' && c!=',')||(c=='x')||(c=='y')||(c=='z')))
 			{
-				printf("-scanUser: scan_deriv: syntax error, '%c' is not an accepted caracter\n", c);
+				printf("-scanUser: getEquation: syntax error, '%c' is not an accepted caracter\n", c);
 				clear();
 				return 0;
 			}
@@ -162,34 +190,29 @@ int scan_deriv(char V[])
 		}
 	}
 	V[eq_size]='\0';//assurer que les string se terminenent par null
-	
 	return eq_size;
 
 }
 
+
 Sys_equation scan_equations()
 {
 	Sys_equation equ=initequations();
-	while (!scan_nom(equ->nom_sys))
-	{
-
-		printf("-scanUser: scan_equations: syntax error, 'Nom du systeme' can't be a (special character) or (null)\n");
-	}
-
+	
 	do
 	{
 		printf("\n(dx/dt)=");
-	}while(!scan_deriv(equ->dx));
+	}while(!getEquation(equ->dx));
 
 	do
 	{	
 		printf("\n(dy/dt)=");
-	}while(!scan_deriv(equ->dy));
+	}while(!getEquation(equ->dy));
 
 	do
 	{	
 		printf("\n(dz/dt)=");
-	}while (!scan_deriv(equ->dz));
+	}while (!getEquation(equ->dz));
 
 	return equ;
 
@@ -199,12 +222,9 @@ Sys_equation scan_equations()
 
 Trajectoire scan_trajectoire()
 {
-	Trajectoire traject= inittrajectoire();
+	printf("\n----------------------CREATING NEW SYSTEM--------------------\n");
+	Trajectoire traject = initTrajectoire(scanParam(), scan_equations(), scanNom());
 
-	printf("\nSaisie de donnees:\n");
-
-	traject->equations=scan_equations();
-	traject->parametres=scan_param();
 
 	return traject;
 }

@@ -8,12 +8,12 @@
 			"name": "(gdb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "enter program name, for example ${workspaceFolder}/test/bin/projetOmar",
+			"program": "${workspaceFolder}/test/bin/projetOmar",
 			"args": [],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}",
+			"cwd": "${workspaceFolder}/test",
 			"environment": [],
-			"externalConsole": true,
+			"externalConsole":false,
 			"MIMode": "gdb",
 			"setupCommands": [
 				{

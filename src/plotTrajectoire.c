@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include "libtrajectoire.h"
 
-int plot_trajectoire(char* data_file_name)
+int plot_trajectoire(char* nom_trajectoire)
 {
-	//ADD COLOR SETTINGS AND SHIT
 	char* commands[]={"set parametric", "splot","u 2:3:4"};
 	FILE* gnuplotc=popen("cd data && gnuplot -persistent","w");
 
@@ -13,11 +12,13 @@ int plot_trajectoire(char* data_file_name)
 		perror("File opening failed");
 		return EXIT_FAILURE;
 	}
-	fprintf(gnuplotc,"%s\n%s %c%s%c %s\n",commands[0],commands[1],'"',data_file_name,'"',commands[2]);
+	fprintf(gnuplotc,"%s\n%s %c%s%s%c %s\n",commands[0],commands[1],'"',nom_trajectoire,".dat",'"',commands[2]);
+
 	pclose(gnuplotc);
 
 	return 0;
 }
+
 int plot(char* nom_trajectoire)
 {
 	FILE *compileSys = popen("make plot", "w");
@@ -27,7 +28,7 @@ int plot(char* nom_trajectoire)
 		perror("File opening failed");
 		return EXIT_FAILURE;
 	}
-	fprintf(compileSys, "./bin/%s", nom_trajectoire);
 	pclose(compileSys);
+	plot_trajectoire(nom_trajectoire);
 	return 0;
 }

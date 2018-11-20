@@ -5,36 +5,28 @@
 #include "libtrajectoire.h"
 
 
-char* fgetline(char file_name[], int startLine, int endLine)
+char* fgetall(char file_name[])
 {
 	FILE *fp = fopen(file_name, "r");
 
 	/*	ERROR HANDLING	*/
 	if (!fp)
 	{
-		perror("File opening failed");
-		exit(EXIT_FAILURE);
+		perror("System Dynamique File opening failed");
+		return NULL;
 	}
 
 	int c; //BECAUSE Char TYPE CANT CONTAIN AN EOF
 
-	int nb_of_lines = 0, i=0;//FIRST LINE NUMBER IS 0
+	int i=0;//FIRST LINE NUMBER IS 0
 
-	char* stringLine=(char*)malloc(6*EQU_SIZE_LIMIT*sizeof(char)); //CREATING A STRING THAT WILL CONTAIN ALL DATA
+	char* str=(char*)malloc(10*EQU_SIZE_LIMIT*sizeof(char)); //CREATING A str THAT WILL CONTAIN ALL DATA
 	
 	while ((c=fgetc(fp)) != EOF)
 	{
-
-		if (startLine <= nb_of_lines && nb_of_lines <= endLine) //EQUATIONS ARE REGISTERED AFTER THE 5TH LINE
-		{
-			stringLine[i] = c;
-
-			i++;
-		}
-		if (c == '\n')
-		{
-			nb_of_lines++;
-		}
+		str[i] = c;
+		i++;
+	
 	}
 	/*			ERROR WHILE READING THE FILE CHECKING				*/
 	if (ferror(fp))
@@ -42,38 +34,39 @@ char* fgetline(char file_name[], int startLine, int endLine)
 
 	fclose(fp);
 	/*		DATA GATHERING FINISHED		*/
-	return stringLine;
+	return str;
 }
-char* parser(char* file_name,char startparsingCaracter,char endparsingCaracter, int start, int end)
+char* parser(char *stringToparse, char parsingCaracter, int start, int end)
 {
-	char* stringToparse=fgetline(file_name, start, end);
-	char* result=(char*)malloc(30*MAX_SYSTEMS*sizeof(char));
-	int i=0;
-	
-	while(1)
+	char* result=(char*)malloc(10*EQU_SIZE_LIMIT*sizeof(char));
+	int i=0,j=0;
+	int nb=0;
+
+	while(nb<end)
 	{
-		if(stringToparse[i] == startparsingCaracter)
+		if(stringToparse[i] == parsingCaracter)
 		{
+			nb++;
 			i++;
-			while (stringToparse[i] != endparsingCaracter)
-			{
-				result[i]=stringToparse[i];
-				i++;
-			}
-			break;
+		}
+		if (start <= nb && nb <end)
+		{
+
+			result[j] = stringToparse[i];
+			j++;
 		}
 		i++;
 	}
-	result[i]='\0';
-	free(stringToparse);
+	result[j]='\0';
 	return result;
-}
+}/*
 char* fgetParam(char file_name[])
 {
-	return fgetline(file_name, 0, 4);
+	return fgetall(file_name, 1, 5);
 }
 
 char* fgetEquations(char file_name[])
 {
-	return fgetline(file_name, 5, 9);
+	return fgetall(file_name, 6, 10);
 }
+*/

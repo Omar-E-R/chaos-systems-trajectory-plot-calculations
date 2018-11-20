@@ -7,20 +7,39 @@
 int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 {
 	
-	char* file_name=(char*)malloc(SYS_NAME_SIZE_LIMIT*sizeof(char));
+	char* file_name=add_extension_to_name(trajectoire->nom_sys,".sysdyn","./sysdyn/");
 
-	add_extension_to_name(file_name,trajectoire->equations->nom_sys,".sysdyn","./sysdyn/");
+	FILE* sysdyn = fopen(file_name, "r");
+	if (!sysdyn)
+	{
+		sysdyn = fopen(file_name, "w+");
+		puts("New Dynamic System data file is created.");
+	}
+	else
+	{
+		fclose(sysdyn);
+		char *old_name = add_extension_to_name(file_name,".old",NULL);
 
-	FILE *sysdyn = fopen(file_name, "w+");
-	
+		int rc = rename(file_name, old_name);
+		if (rc)
+		{
+			perror("Renaming modified Dynamic System");
+			return 1;
+		}
+		sysdyn = fopen(file_name, "w+");
+		if (!sysdyn)
+		{
+			perror("File opening failed");
+			return EXIT_FAILURE;
+		}
+	}
 	if (!sysdyn)
 	{
 		perror("File opening failed");
 		return EXIT_FAILURE;
 	}
 
-	fprintf(sysdyn, "\n");
-	fprintf(sysdyn, "%f\n", trajectoire->parametres->dt);
+	fprintf(sysdyn, "\n%f\n", trajectoire->parametres->dt);
 
 	fprintf(sysdyn, "%d\n", trajectoire->parametres->Tmax);
 
@@ -32,11 +51,11 @@ int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 	fprintf(sysdyn, "%s\n", trajectoire->equations->dy);
 	fprintf(sysdyn, "%s\n", trajectoire->equations->dz);
 
-	fprintf(sysdyn, "%s\n", trajectoire->equations->nom_sys);
+	fprintf(sysdyn, "%s\n", trajectoire->nom_sys);
 
 	fclose(sysdyn);
 
-	//free(file_name);
+	free(file_name);
 	
 	return 0;
 }
@@ -44,40 +63,57 @@ int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 int convert_struct_to_data_file(Fonctions f, Parametres param_init, char* file_name)
 {
 
-	int j = 0;//INT OR DOUBLE? WHICH IS BETTER? TEST
-	double x, y, z;
 
-	FILE *dat = fopen(file_name, "w+");
-	
+	FILE *dat = fopen(file_name, "r");
 	if (!dat)
 	{
-		perror("File opening failed");
-		return EXIT_FAILURE;
+		dat = fopen(file_name, "w+");
+		puts("New Dynamic System data file is created.");
+	}
+	else
+	{
+		fclose(dat);
+		char* old_name=(char*)malloc(SYS_NAME_SIZE_LIMIT*sizeof(char));
+		strcpy(old_name,file_name);
+		strcat(old_name,".old");
+		int rc = rename(file_name, old_name);
+		if (rc)
+		{
+			perror("Renaming modified Dynamic System data file");
+			return 1;
+		}
+		dat = fopen(file_name, "w+");
+		if (!dat)
+		{
+			perror("File opening failed");
+			return EXIT_FAILURE;
+		}
 	}
 
 
+	int j = 0;//INT OR DOUBLE? WHICH IS BETTER? TEST
+	double x, y, z;
+
 	int Tmax = param_init->Tmax;
-	float dt = param_init->dt;
+	double dt = param_init->dt;
 
-	Point pt0;
+	Point pt0=initpoint();
+	pt0=param_init->point_init;
 
-	pt0.x = param_init->point_init->x;
-	pt0.y = param_init->point_init->y;
-	pt0.z = param_init->point_init->z;
 
-	fprintf(dat, "%d %lf %lf %lf\n", j, pt0.x, pt0.y, pt0.z);
+	fprintf(dat, "%d %lf %lf %lf\n", j, pt0->x, pt0->y, pt0->z);
 
 	while (j < (Tmax / dt))
 	{
-		x = pt0.x + ((*(f->Dx))(&pt0)) * dt;
-		y = pt0.y + ((*(f->Dy))(&pt0)) * dt;
-		z = pt0.z + ((*(f->Dz))(&pt0)) * dt;
+		x = pt0->x + ((*(f->Dx))(pt0)) * dt;
+		y = pt0->y + ((*(f->Dy))(pt0)) * dt;
+		z = pt0->z + ((*(f->Dz))(pt0)) * dt;
 
 		fprintf(dat, "%d %lf %lf %lf\n", j, x, y, z);
 
-		pt0.x = x;
-		pt0.y = y;
-		pt0.z = z;
+		pt0->x = x;
+		pt0->y = y;
+		pt0->z = z;
 
 		j++;
 	}
@@ -89,17 +125,12 @@ int convert_struct_to_data_file(Fonctions f, Parametres param_init, char* file_n
 }
 
 
-/* I NEED TO CREAT A FUNCTION THAT MAKE SURE ALL OF THE EQUATIONS ARE COMPATIBLE */
-
-
 
 
 int convert_struct_to_function(Trajectoire traject)
 {
 
-	char *file_name = (char *)malloc(2*SYS_NAME_SIZE_LIMIT * sizeof(char));
-
-	add_extension_to_name(file_name, traject->equations->nom_sys,".c","./tmp/");
+	char *file_name = add_extension_to_name(traject->nom_sys,".c","./tmp/");
 
 	FILE *fp = fopen(file_name, "w+");
 
@@ -120,7 +151,7 @@ int convert_struct_to_function(Trajectoire traject)
 
 	fprintf(fp, "\n");
 
-	fprintf(fp, "double Dx(Point* pt)\n");
+	fprintf(fp, "double Dx(Point pt)\n");
 	fprintf(fp, "{");
 	fprintf(fp, "\n");
 	fprintf(fp, "\treturn ");
@@ -149,7 +180,7 @@ int convert_struct_to_function(Trajectoire traject)
 
 	fprintf(fp, "\n");
 
-	fprintf(fp, "double Dy(Point* pt)\n");
+	fprintf(fp, "double Dy(Point pt)\n");
 	fprintf(fp, "{");
 	fprintf(fp, "\n");
 	fprintf(fp, "\treturn ");
@@ -176,7 +207,7 @@ int convert_struct_to_function(Trajectoire traject)
 
 	i = 0;
 
-	fprintf(fp, "double Dz(Point* pt)\n");
+	fprintf(fp, "double Dz(Point pt)\n");
 	fprintf(fp, "{");
 	fprintf(fp, "\n");
 	fprintf(fp, "\treturn ");
@@ -210,28 +241,22 @@ int convert_struct_to_function(Trajectoire traject)
 	fprintf(fp, "{");
 	fprintf(fp, "\n");
 	fprintf(fp, "\n");
-	fprintf(fp, "\tPoint point_initiale;\n");
-	fprintf(fp, "\tpoint_initiale.x = %f;\n", traject->parametres->point_init->x);
-	fprintf(fp, "\tpoint_initiale.y = %f;\n", traject->parametres->point_init->y);
-	fprintf(fp, "\tpoint_initiale.z = %f;\n", traject->parametres->point_init->z);
-	fprintf(fp, "\n");
-	fprintf(fp, "\n");
-	fprintf(fp, "\tFonctions %s=(Fonctions)malloc(sizeof(Fonctions));\n",traject->equations->nom_sys);
-	fprintf(fp, "\n");
-	fprintf(fp, "\t(%s->Dx)=&Dx;\n", traject->equations->nom_sys);
-	fprintf(fp, "\t(%s->Dy)=&Dy;\n", traject->equations->nom_sys);
-	fprintf(fp, "\t(%s->Dz)=&Dz;\n", traject->equations->nom_sys);
-	fprintf(fp, "\n");
-	fprintf(fp, "\tParametres param=(Parametres)malloc(sizeof(Parametres));\n");
-	fprintf(fp, "\n");
-	fprintf(fp, "\tparam->point_init=&point_initiale;\n");
-	fprintf(fp, "\n");
-	fprintf(fp, "\tparam->dt=dt;\n");
-	fprintf(fp, "\n");
-	fprintf(fp, "\tparam->Tmax=Tmax;\n");
+	fprintf(fp, "\tPoint point_initiale=initPoint(%lf, %lf, %lf);\n", traject->parametres->point_init->x, traject->parametres->point_init->y, traject->parametres->point_init->z);
 
-	fprintf(fp, "\tconvert_struct_to_data_file(%s, param, \"data/%s.dat\");\n",traject->equations->nom_sys, traject->equations->nom_sys);
-	fprintf(fp, "\tplot_trajectoire(\"%s.dat\");\n", traject->equations->nom_sys);
+	fprintf(fp, "\n");
+	fprintf(fp, "\n");
+	fprintf(fp, "\tFonctions %s=(Fonctions)malloc(sizeof(struct fonctions));\n",traject->nom_sys);
+	fprintf(fp, "\n");
+	fprintf(fp, "\t(%s->Dx)=&Dx;\n", traject->nom_sys);
+	fprintf(fp, "\t(%s->Dy)=&Dy;\n", traject->nom_sys);
+	fprintf(fp, "\t(%s->Dz)=&Dz;\n", traject->nom_sys);
+	fprintf(fp, "\n");
+	fprintf(fp, "\tParametres param=initParametres(dt, Tmax, point_initiale);\n");
+	fprintf(fp, "\n");
+
+
+	fprintf(fp, "\tconvert_struct_to_data_file(%s, param, \"data/%s.dat\");\n",traject->nom_sys, traject->nom_sys);
+	//fprintf(fp, "\tplot_trajectoire(\"%s.dat\");\n", traject->nom_sys);
 	fprintf(fp, "\n");
 
 	
@@ -266,10 +291,10 @@ int charToInt(char* c)
 
 
 
-float charToFloat(char *c)
+double charToFloat(char *c)
 {
 	int i=0;
-	float a=0,b=0;
+	double a=0,b=0;
 	while(c[i]!='\0')
 	{
 		if(c[i]=='.')
@@ -298,11 +323,12 @@ float charToFloat(char *c)
 Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 {
 
-	char *file_name = (char *)malloc(SYS_NAME_SIZE_LIMIT * sizeof(char));
+	char *file_name =add_extension_to_name(nom_trajectoire, ".sysdyn","./sysdyn/");
 
-	add_extension_to_name(file_name,nom_trajectoire, ".sysdyn","./sysdyn/");
+	char *traj = fgetall(file_name);
 
-	Trajectoire trajectoire = initTrajectoire(initEquations(parser(file_name, '\n', '\n', 5, 6), parser(file_name, '\n', '\n', 6, 7), parser(file_name, '\n', '\n', 7, 8), parser(file_name, '\n', '\n', 8, 9)), initParametres(charToFloat(parser(file_name, '\n', '\n', 0, 1)), charToInt(parser(file_name, '\n', '\n', 1, 2)), initPoint(charToFloat(parser(file_name,'\n','\n',2,3)),charToFloat(parser(file_name,'\n','\n',3,4)),charToFloat(parser(file_name,'\n','\n',4,5)))));
+	Trajectoire trajectoire = initTrajectoire(initParametres(charToFloat(parser(traj, '\n', 1, 2)), charToInt(parser(traj, '\n', 2, 3)), initPoint(charToFloat(parser(traj, '\n', 3, 4)), charToFloat(parser(traj, '\n', 4, 5)), charToFloat(parser(traj, '\n', 5, 6)))), initEquations(parser(traj, '\n', 6, 7), parser(traj, '\n', 7, 8), parser(traj, '\n', 8, 9)), parser(traj, '\n', 9, 10));
+
 	/*
 	int Tmax=0;cd
 	float dt=0;
@@ -411,7 +437,7 @@ Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 			if (nb_of_lines == 3)
 			{
 				equations[i] = '\0';
-				trajectoire->equations->nom_sys=equations;
+				trajectoire->nom_sys=equations;
 				quitt=-7;
 			}
 			nb_of_lines++;
@@ -424,15 +450,4 @@ Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 	//free(param);
 */
 	return trajectoire;
-}
-
-int convert_sysdyn_file_to_function(char file_name[])
-{
-
-	Trajectoire traject=convert_sysdyn_file_to_struct(file_name);
-
-
-	convert_struct_to_function(traject);
-
-	return 0;
 }
