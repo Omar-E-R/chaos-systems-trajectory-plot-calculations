@@ -1,14 +1,19 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include"libtrajectoire.h"
+#include<unistd.h>
+#include<libtrajectoire.h>
 
 
 
 
 int main(int argc, char* argv[])
 {
+	char buff[FILENAME_MAX];
+	getcwd(buff, FILENAME_MAX);
+	printf("Current working dir: %s\n", buff);
 	//stdout=fopen("std.out","w+");
 	//stdin=fopen("std.in","r");
+
 	if(argc==1)
 	{
 		printf("\nSoit un point M qui subit des forces qui ne dependent que de la position et vitesse de point M.\n");

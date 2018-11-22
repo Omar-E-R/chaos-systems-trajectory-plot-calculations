@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "libtrajectoire.h"
-
+#ifdef ROOT
 /* ------TO CLEAR THE BUFFER---*/
 
 void clear()
@@ -46,7 +46,7 @@ int getNom(char* nom)
 	{
 		if (!isalpha(read))
 		{
-			puts("Error: Invalid character, name can only contains alphanumeric characters \"ABCDE abcde 01234\"");
+			fputs("\nError: Invalid character, name can only contains alphanumeric characters \"ABCDE abcde 01234\"\n",stderr);
 			clear();
 			return 0;
 		}
@@ -54,7 +54,7 @@ int getNom(char* nom)
 		i++;
 		if(i == (SYS_NAME_SIZE_LIMIT-15))
 		{
-			puts("Memory full");
+			fputs("\nWARNING: Buffer is FULL\n",stderr);
 			clear();
 			break;
 		}
@@ -76,17 +76,17 @@ char* scanNom()
 			printf("Nom du systeme:\n");
 		}while (!getNom(nom));
 
-		char *file_name = add_extension_to_name(nom, ".sysdyn", "./sysdyn/");
+		char *file_name = add_extension_to_name(nom, SYSDYN, ROOT"/"DATA);
 
 		FILE *sysdyn = fopen(file_name, "r");
 		if (!sysdyn)
 		{
-			puts("Sucess: Dynamic System name");
+			fputs("\nSucess: Dynamic System name is available\n",stderr);
 			break;
 		}
 		else
 		{
-			puts("ERROR: DYNAMIC SYSTEM NAME ALREADY EXISTS");
+			fputs("\nERROR: Dynamic System: Name already exists\n",stderr);
 			printf("Nom existe deja, veuillez utiliser un autre nom\n");
 		}
 	}
@@ -99,7 +99,7 @@ int scanInt(char* ch)
 	while (1)
 	{
 		printf("\n%s=",ch);
-		if (!scanf("%d", &(t)))
+		if (!scanf(" %d", &(t)))
 		{
 			printf("scan%s: syntax error, '%s' is of type 'int'\n",ch,ch);
 			clear();
@@ -166,7 +166,7 @@ EQUATIONS VERFICAATION IMPLEMENTATION
 
 */
 
-int getEquation(char V[])
+int getEquation(char* V)
 {
 	int eq_size=0;
 	char c;
@@ -229,3 +229,4 @@ Trajectoire scan_trajectoire()
 	return traject;
 }
 
+#endif

@@ -1,6 +1,5 @@
 #!/bin/bash
-
-LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:.../lib
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:../lib
 export LD_LIBRARY_PATH
 
 #clear
@@ -35,7 +34,7 @@ while : ; do
 		read choice
 
 		if [ "$choice" == "q" ]; then
-			#clear
+			clear
 			exit
 		
 		elif [ $projectisCompiled -eq 0 ]; then
@@ -58,12 +57,13 @@ while : ; do
 		echo "<1> To edit or view any of the systems data"
 		echo "<2> To delete any of the systems file data"
 		echo "<3> To plot any of the systems"
+		echo "<q> To exit program"
 
 		read choice
 
 		if [ "$choice" == "1" ]; then
 			while : ; do
-				#clear
+				clear
 				echo "which one of the systems below?:"
 				echo "---------------"
 				echo $(cut -d "/" -f 2 ./search/searchsys | cut -d "." -f 1)
@@ -79,8 +79,8 @@ while : ; do
 				fi
 			done
 			./bin/ElRifai $cmd
-		
-		elif [ "$choice" == "2" ]; then
+		fi
+		if [ "$choice" == "2" ]; then
 			echo "Enter the full exact name of the system you want to delete from below:"
 			echo "---------------"
 			echo $(cut -d "/" -f 2 ./search/searchsys | cut -d "." -f 1)
@@ -108,14 +108,16 @@ while : ; do
 				find -name "$cmd" -fprint ./search/searchsys
 				rm -f $(echo $(cut -d "" -f 2 ./search/searchsys))
 
-				#clear
+				clear
 				echo "\"$cmd\" system no longer exists"
 
 			fi
 		fi
 		if [ "$choice" == "3" ]; then
 			./gnuplotc.sh "$cmd"
-		
+		fi
+		if [ "$choice" == "q" ]; then
+			exit
 		fi
 	fi
 

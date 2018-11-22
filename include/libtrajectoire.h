@@ -20,6 +20,8 @@
 #define MAX_SYSTEMS 10
 #define PARAM_SIZE_LIMIT 30
 #define SYS_NAME_SIZE_LIMIT 50
+#define DATA "data/"
+#define SYSDYN ".sysdyn"
 
 struct point
 {
@@ -60,14 +62,12 @@ struct trajectoire
 
 typedef struct trajectoire *Trajectoire;
 
-struct fonctions
+struct fonction
 {
-	double (*Dx)(Point pt);
-	double (*Dy)(Point pt);
-	double (*Dz)(Point pt);
+	void (*Derive)(Point pt, Point pt0, int choix);
 };
 
-typedef struct fonctions *Fonctions;
+typedef struct fonction *Fonction;
 
 #include "initTrajectoire.h"
 #include "scanUser.h"

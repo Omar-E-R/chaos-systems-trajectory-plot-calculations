@@ -3,25 +3,26 @@
 #include <string.h>
 #include <ctype.h>
 #include "libtrajectoire.h"
+#ifdef ROOT
 
 int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 {
 	
-	char* file_name=add_extension_to_name(trajectoire->nom_sys,".sysdyn","./sysdyn/");
+	char* file_name=add_extension_to_name(trajectoire->nom_sys,SYSDYN,ROOT"/"DATA);
 
 	FILE* sysdyn = fopen(file_name, "r");
 	if (!sysdyn)
 	{
 		sysdyn = fopen(file_name, "w+");
-		puts("New Dynamic System data file is created.");
+		fputs("\nNew Dynamic System data file is created\n",stderr);
 	}
 	else
 	{
 		fclose(sysdyn);
 		char *old_name = add_extension_to_name(file_name,".old",NULL);
 
-		int rc = rename(file_name, old_name);
-		if (rc)
+		int success = rename(file_name, old_name);
+		if (success)
 		{
 			perror("Renaming modified Dynamic System");
 			return 1;
@@ -60,7 +61,7 @@ int convert_struct_to_sysdyn_file(Trajectoire trajectoire)
 	return 0;
 }
 
-int convert_struct_to_data_file(Fonctions f, Parametres param_init, char* file_name)
+int convert_struct_to_data_file(Fonction f, Parametres param_init, char* file_name)
 {
 
 
@@ -68,20 +69,23 @@ int convert_struct_to_data_file(Fonctions f, Parametres param_init, char* file_n
 	if (!dat)
 	{
 		dat = fopen(file_name, "w+");
-		puts("New Dynamic System data file is created.");
+		fputs("\nNew Dynamic System data file is created\n",stderr);
 	}
 	else
 	{
-		fclose(dat);
-		char* old_name=(char*)malloc(SYS_NAME_SIZE_LIMIT*sizeof(char));
+		char* old_name=initnom();
+		
 		strcpy(old_name,file_name);
 		strcat(old_name,".old");
-		int rc = rename(file_name, old_name);
-		if (rc)
+		
+		int success = rename(file_name, old_name);
+		
+		if (success)
 		{
 			perror("Renaming modified Dynamic System data file");
 			return 1;
 		}
+		
 		dat = fopen(file_name, "w+");
 		if (!dat)
 		{
@@ -90,32 +94,42 @@ int convert_struct_to_data_file(Fonctions f, Parametres param_init, char* file_n
 		}
 	}
 
-
-	int j = 0;//INT OR DOUBLE? WHICH IS BETTER? TEST
-	double x, y, z;
-
 	int Tmax = param_init->Tmax;
+
 	double dt = param_init->dt;
+	double temps =dt;
+	
+	Point pt0=param_init->point_init;
 
-	Point pt0=initpoint();
-	pt0=param_init->point_init;
+	Point pt=initpoint();
+	Point vitesse0=initPoint(0,0,0);
+	Point vitesse=initPoint(0,0,0);
+	Point delta=initPoint(0,0,0);
 
+	fprintf(dat, "0 %lf %lf %lf 0 0 0 0 0 0 0 0 0 0 0\n", pt0->x, pt0->y, pt0->z);
 
-	fprintf(dat, "%d %lf %lf %lf\n", j, pt0->x, pt0->y, pt0->z);
-
-	while (j < (Tmax / dt))
+	while (temps < Tmax)
 	{
-		x = pt0->x + ((*(f->Dx))(pt0)) * dt;
-		y = pt0->y + ((*(f->Dy))(pt0)) * dt;
-		z = pt0->z + ((*(f->Dz))(pt0)) * dt;
+		((*(f->Derive))(pt, pt0, 0));
+		((*(f->Derive))(vitesse0, pt0, 2));
+		((*(f->Derive))(delta, pt0, 1));
+		((*(f->Derive))(vitesse, pt, 2));
 
-		fprintf(dat, "%d %lf %lf %lf\n", j, x, y, z);
+		fprintf(dat, "%lf %lf %lf %lf",dt, pt->x, pt->y, pt->z);
 
-		pt0->x = x;
-		pt0->y = y;
-		pt0->z = z;
+		fprintf(dat, " %lf %lf %lf", delta->x, delta->y, delta->z);
 
-		j++;
+		fprintf(dat, " %lf %lf %lf", vitesse->x, vitesse->y, vitesse->z);
+
+		fprintf(dat, " %lf %lf %lf\n", vitesse->x - vitesse0->x, vitesse->y - vitesse0->y, vitesse->z - vitesse0->z);
+
+		temps=temps + dt;
+
+		((*(f->Derive))(pt0, pt, 3));
+
+
+
+
 	}
 
 
@@ -130,7 +144,7 @@ int convert_struct_to_data_file(Fonctions f, Parametres param_init, char* file_n
 int convert_struct_to_function(Trajectoire traject)
 {
 
-	char *file_name = add_extension_to_name(traject->nom_sys,".c","./tmp/");
+	char *file_name = add_extension_to_name(traject->nom_sys,".c",ROOT"/tmp/");
 
 	FILE *fp = fopen(file_name, "w+");
 
@@ -140,24 +154,97 @@ int convert_struct_to_function(Trajectoire traject)
 		return EXIT_FAILURE;
 	}
 
-	int i = 0;
 
 	fprintf(fp, "#include<stdio.h>\n");
 	fprintf(fp, "#include<stdlib.h>\n");
 	fprintf(fp, "#include\"libtrajectoire.h\"\n\n\n");
 
-	fprintf(fp, "float dt=%f;\n",traject->parametres->dt);
+	fprintf(fp, "double dt=%f;\n",traject->parametres->dt);
 	fprintf(fp, "int Tmax=%d;\n",traject->parametres->Tmax);
 
 	fprintf(fp, "\n");
 
-	fprintf(fp, "double Dx(Point pt)\n");
+	fprintf(fp, "void calcultraj(Point pt, Point pt0, int choix)\n");
+	fprintf(fp, "{");
+	
+	fprintf(fp, "\n");
+	
+	fprintf(fp, "\n\tdouble x, y, z;");
+	
+	fprintf(fp, "\n\tx = pt0->x;");
+	fprintf(fp, "\n\ty = pt0->y;");
+	fprintf(fp, "\n\tz = pt0->z;");
+	
+	fprintf(fp, "\n");
+	fprintf(fp, "\n\tif(choix==0)");
+	fprintf(fp, "\n");
+	fprintf(fp, "\n\t{");
+	fprintf(fp, "\n\t\tpt->x = pt0->x + (%s)*dt;", traject->equations->dx);
+	fprintf(fp, "\n\t\tpt->y = pt0->y + (%s)*dt;", traject->equations->dy);
+	fprintf(fp, "\n\t\tpt->z = pt0->z + (%s)*dt;", traject->equations->dz);
+	fprintf(fp, "\n");
+	fprintf(fp, "\n\t}");
+	fprintf(fp, "\n");
+
+	fprintf(fp, "\n\tif(choix==1)");
+	fprintf(fp, "\n\t{");
+	fprintf(fp, "\n");
+	fprintf(fp, "\n\t\tpt->x = (%s)*dt;", traject->equations->dx);
+	fprintf(fp, "\n\t\tpt->y = (%s)*dt;", traject->equations->dy);
+	fprintf(fp, "\n\t\tpt->z = (%s)*dt;", traject->equations->dz);
+	fprintf(fp, "\n\t");
+	fprintf(fp, "\n\t}");
+
+	fprintf(fp, "\n");
+	
+	fprintf(fp, "\n\tif(choix==2)");
+	fprintf(fp, "\n\t{");
+	fprintf(fp, "\n\t\tpt->x =  %s;", traject->equations->dx);
+	fprintf(fp, "\n\t\tpt->y =  %s;", traject->equations->dy);
+	fprintf(fp, "\n\t\tpt->z =  %s;", traject->equations->dz);
+	fprintf(fp, "\n");
+	fprintf(fp, "\t}");
+
+	fprintf(fp, "\n");
+	
+	fprintf(fp, "\n\tif(choix==3)");
+	fprintf(fp, "\n\t{");
+	fprintf(fp, "\n\t\tpt->x = pt0->x;");
+	fprintf(fp, "\n\t\tpt->y = pt0->y;");
+	fprintf(fp, "\n\t\tpt->z = pt0->z;");
+	fprintf(fp, "\n\t}");
+	fprintf(fp, "\n");
+	fprintf(fp, "}");
+
+	fprintf(fp, "int main(int argc, char* argv[])\n");
 	fprintf(fp, "{");
 	fprintf(fp, "\n");
-	fprintf(fp, "\treturn ");
+	fprintf(fp, "\n");
+	fprintf(fp, "\tPoint point_initiale=initPoint(%lf, %lf, %lf);\n", traject->parametres->point_init->x, traject->parametres->point_init->y, traject->parametres->point_init->z);
 
+	fprintf(fp, "\n");
+	fprintf(fp, "\n");
+	fprintf(fp, "\tFonction %s=(Fonction)malloc(sizeof(struct fonction));\n", traject->nom_sys);
+	fprintf(fp, "\n");
+	fprintf(fp, "\t(%s->Derive)=&calcultraj;\n", traject->nom_sys);
+	fprintf(fp, "\n");
+	fprintf(fp, "\tParametres param=initParametres(dt, Tmax, point_initiale);\n");
+	fprintf(fp, "\n");
+
+	fprintf(fp, "\tconvert_struct_to_data_file(%s, param, \"%s/data/%s.dat\");\n", traject->nom_sys, ROOT, traject->nom_sys);
+	fprintf(fp, "\n");
+
+	fprintf(fp, "\treturn 0;\n");
+
+	fprintf(fp, "}");
+
+	fclose(fp);
+
+
+	free(file_name);
+	return 0;
+	/*
 	char *dx = (traject->equations->dx);
-
 	while (dx[i] != '\0')
 	{
 		if (dx[i] == 'x')
@@ -170,11 +257,7 @@ int convert_struct_to_function(Trajectoire traject)
 			fprintf(fp, "%c", dx[i]);
 		i++;
 	}
-	fprintf(fp, ";");
 
-	fprintf(fp, "\n");
-
-	fprintf(fp, "}");
 
 	i = 0;
 
@@ -236,39 +319,8 @@ int convert_struct_to_function(Trajectoire traject)
 	fprintf(fp, "\n");
 	fprintf(fp, "\n");
 	fprintf(fp, "\n");
-
-	fprintf(fp, "int main(int argc, char* argv[])\n");
-	fprintf(fp, "{");
-	fprintf(fp, "\n");
-	fprintf(fp, "\n");
-	fprintf(fp, "\tPoint point_initiale=initPoint(%lf, %lf, %lf);\n", traject->parametres->point_init->x, traject->parametres->point_init->y, traject->parametres->point_init->z);
-
-	fprintf(fp, "\n");
-	fprintf(fp, "\n");
-	fprintf(fp, "\tFonctions %s=(Fonctions)malloc(sizeof(struct fonctions));\n",traject->nom_sys);
-	fprintf(fp, "\n");
-	fprintf(fp, "\t(%s->Dx)=&Dx;\n", traject->nom_sys);
-	fprintf(fp, "\t(%s->Dy)=&Dy;\n", traject->nom_sys);
-	fprintf(fp, "\t(%s->Dz)=&Dz;\n", traject->nom_sys);
-	fprintf(fp, "\n");
-	fprintf(fp, "\tParametres param=initParametres(dt, Tmax, point_initiale);\n");
-	fprintf(fp, "\n");
-
-
-	fprintf(fp, "\tconvert_struct_to_data_file(%s, param, \"data/%s.dat\");\n",traject->nom_sys, traject->nom_sys);
-	//fprintf(fp, "\tplot_trajectoire(\"%s.dat\");\n", traject->nom_sys);
-	fprintf(fp, "\n");
-
+*/
 	
-	fprintf(fp, "\treturn 0;\n");
-	
-	fprintf(fp, "}");
-
-	fclose(fp);
-
-	//free(file_name);
-
-	return 0;
 }
 
 
@@ -278,14 +330,22 @@ int convert_struct_to_function(Trajectoire traject)
 
 int charToInt(char* c)
 {
-	int i=0, max= strlen(c);
+		
+	int i=0, negatif=1, max=0;
+	if(c[0]=='-')
+	{
+		max= strlen(c)-1;
+		negatif=-1;
+		i=1;
+	}
+	max= strlen(c);
 	int res=0;
 	while (i<max)
 	{
 		res = res*10 + (c[i]-48);
 		i++;
 	}
-	return res;
+	return negatif*res;
 }
 
 
@@ -293,14 +353,21 @@ int charToInt(char* c)
 
 double charToFloat(char *c)
 {
-	int i=0;
+	int i=0, negatif=1;
 	double a=0,b=0;
 	while(c[i]!='\0')
 	{
 		if(c[i]=='.')
 		{
 			c[i]='\0';
-			a=charToInt(c);
+			if(c[0]=='-')
+			{
+				a = charToInt(&(c[1]));
+				negatif=-1;
+			}
+			else
+				a = charToInt(c);
+
 			b=charToInt(&(c[i+1]));
 			i=i+1;
 			while (c[i] !='\0')
@@ -308,7 +375,7 @@ double charToFloat(char *c)
 				b=b/10;
 				i++;
 			}
-			return a + b;
+			return negatif*(a + b);
 		}
 		i++;
 
@@ -323,7 +390,7 @@ double charToFloat(char *c)
 Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 {
 
-	char *file_name =add_extension_to_name(nom_trajectoire, ".sysdyn","./sysdyn/");
+	char *file_name =add_extension_to_name(nom_trajectoire, SYSDYN,ROOT"/"DATA);
 
 	char *traj = fgetall(file_name);
 
@@ -451,3 +518,5 @@ Trajectoire convert_sysdyn_file_to_struct(char nom_trajectoire[])
 */
 	return trajectoire;
 }
+
+#endif

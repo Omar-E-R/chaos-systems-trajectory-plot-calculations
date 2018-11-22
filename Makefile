@@ -7,6 +7,7 @@
 ####################################################################################################################################
 
 
+
 SRCDIR := src
 HDRDIR := include
 OBJDIR := tmp
@@ -24,21 +25,43 @@ TARGET := $(INCLUDES:.h=.so)
 
 CC := gcc
 
-CFLAGS := -Wall -g
+CFLAGS := -Wall -Werror -ggdb -funsigned-char
 
-LFLAGS := -fPIC -I$(HDRDIR)
+LFLAGS :=-I$(HDRDIR) -fPIC
+
+
+
+all: $(LIBDIR)/$(TARGET)
+	rm -f $(TMPDIR)/*
 
 
 $(LIBDIR)/$(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) -shared $^ -o $@
-	rm -rf $(OBJECTS)
+	$(CC) $(CFLAGS) $(LFLAGS) -pie $^ -o $@ -Wl,-E
+
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(HDRDIR)/$(INCLUDES)
-	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@
+	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@ -DROOT=\"$$PWD\"
 
-.PHONY: clean wipe
 
-wipe: clean
-	rm -rf $(TMPDIR)/*
+#link and compile all the TEMPORARY SRC FILES, that normally are responsible for generating .dat files for plot
+
+
+PLOTSRC := $(wildcard $(TMPDIR)/*.c)
+
+
+
+PLOT := $(PLOTSRC:$(TMPDIR)/%.c=$(TMPDIR)/%)
+
+plot: $(PLOT)
+	$^
+	rm -f $(PLOT)
+	rm -f $(TMPDIR)/*
+
+$(PLOT):$(TMPDIR)/%: $(PLOTSRC)
+	$(CC) $(CFLAGS) -I$(HDRDIR) -L$(LIBDIR) -ltrajectoire -Wl,-rpath=$(LIBDIR) $^ -o $@
+
+.PHONY: clean
+
 clean:
-	mv -f $(LIBDIR)/$(TARGET) $(TMPDIR)
+	rm -f $(LIBDIR)/$(TARGET)
+	rm -f ./data/*.*

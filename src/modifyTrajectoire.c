@@ -159,7 +159,6 @@ int modifyTrajectoire(char* nom_trajectoire)
 		char choice;
 		do
 		{
-			clear();
 			printf("\nDo you want to save modifications in a new System and keep the old one? y/n\n");
 		} while ((choice = getchar()) != 'n' && choice != 'y');
 		if (choix == 'y')
@@ -169,7 +168,6 @@ int modifyTrajectoire(char* nom_trajectoire)
 			trajectoire->nom_sys = scanNom();
 		}
 	}
-
 	convert_struct_to_sysdyn_file(trajectoire);
 
 	convert_struct_to_function(trajectoire);

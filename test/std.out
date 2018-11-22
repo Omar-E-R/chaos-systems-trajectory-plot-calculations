@@ -1,11 +1,9 @@
-make[1]: Entering directory '/home/fangtooth/proj/test'
-gcc -Wall -g -fPIC -I../include -c tmp/lorenz.c -o tmp/lorenz.o
-gcc -Wall -g -fPIC -I../include tmp/lorenz.o -L../lib -ltrajectoire -o bin/lorenz
-./bin/lorenz
-New Dynamic System data file is created.
-rm -f ./bin/lorenz
+make[1]: Entering directory '/home/fangtooth/ElRifai'
+gcc -Wall -Werror -ggdb -funsigned-char -Iinclude -Llib -ltrajectoire -Wl,-rpath=lib tmp/lo.c -o tmp/lo
+tmp/lo
+rm -f tmp/lo
 rm -f tmp/*
-make[1]: Leaving directory '/home/fangtooth/proj/test'
+make[1]: Leaving directory '/home/fangtooth/ElRifai'
 
 Soit un point M qui subit des forces qui ne dependent que de la position et vitesse de point M.
 On utilise les coordonnees cartesiennes (x, y, z) pour reperer le point M dans l'espace.
@@ -31,7 +29,6 @@ Press any key to continue...
 
 ----------------------CREATING NEW SYSTEM--------------------
 Nom du systeme:
-Sucess: Dynamic System name
 
 (dx/dt)=
 (dy/dt)=
@@ -46,4 +43,4 @@ z0=
 y0=
 x0=
 Tmax=
-dt=New Dynamic System data file is created.
+dt=

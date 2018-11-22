@@ -5,7 +5,7 @@
 #include "libtrajectoire.h"
 
 
-char* fgetall(char file_name[])
+char* fgetall(char* file_name)
 {
 	FILE *fp = fopen(file_name, "r");
 
@@ -30,7 +30,7 @@ char* fgetall(char file_name[])
 	}
 	/*			ERROR WHILE READING THE FILE CHECKING				*/
 	if (ferror(fp))
-		puts("I/O error when reading");
+		fputs("\nI/O error when reading\n",stderr);
 
 	fclose(fp);
 	/*		DATA GATHERING FINISHED		*/

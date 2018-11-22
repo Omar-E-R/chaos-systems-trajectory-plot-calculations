@@ -4,14 +4,15 @@
 	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
+
 		{
 			"name": "(gdb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/test/bin/projetOmar",
-			"args": [],
+			"program": "${workspaceFolder}/test/bin/ElRifai",
+			"args": ["lorenz"],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}/test",
+			"cwd": "${workspaceFolder}/",
 			"environment": [],
 			"externalConsole":false,
 			"MIMode": "gdb",
